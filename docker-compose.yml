@@ -1,0 +1,91 @@
+version: "3.3"
+services:
+  mysqldb:
+    image: mariadb
+    networks:
+      - saludos-mysql
+    command: --init-file /docker-entrypoint-initdb.d/bd.sql
+    volumes:
+      - ./bd.sql:/docker-entrypoint-initdb.d/bd.sql
+    environment:
+      MARIADB_ROOT_PASSWORD: 123456
+    restart: always
+ 
+  saludar-service:
+    image: saludar-service
+    build:
+      context: ./saludar
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      MYSQL_HOST: mysqldb
+    networks:
+      - saludos-mysql
+    depends_on:
+      - mysqldb
+    restart: always
+ 
+  borrar-service:
+    image: borrar-service
+    build:
+      context: ./borrar
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"
+    environment:
+      MYSQL_HOST: mysqldb
+    networks:
+      - saludos-mysql
+    depends_on:
+      - mysqldb
+    restart: always
+ 
+  modificar-service:
+    image: modificar-service
+    build:
+      context: ./modificar
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8080"
+    environment:
+      MYSQL_HOST: mysqldb
+    networks:
+      - saludos-mysql
+    depends_on:
+      - mysqldb
+    restart: always
+ 
+  buscar-service:
+    image: buscar-service
+    build:
+      context: ./buscar
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8080"
+    environment:
+      MYSQL_HOST: mysqldb
+    networks:
+      - saludos-mysql
+    depends_on:
+      - mysqldb
+    restart: always
+
+  proxy-service:
+    image: proxy-service
+    build:
+      context: ./proxy
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    networks:
+      - saludos-mysql
+    depends_on:
+      - saludar-service
+      - borrar-service
+      - modificar-service
+      - buscar-service
+    restart: always
+
+networks:
+  saludos-mysql:
